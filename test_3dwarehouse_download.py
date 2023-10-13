@@ -34,7 +34,4 @@ if __name__ == "__main__":
     url = 'https://3dwarehouse.sketchup.com/warehouse/v1.0/entities/3d2c1f19-adc7-4ff3-813f-f4f93a44ee34/binaries/zip?download=true'
     p=Path("test")
     p.mkdir(exist_ok=True)
-    cookies = {
-        "SID":'"AuthKey 123 .....569"'
-    }
-    download(url, p, "M10_NUT.zip", cookies=cookies)
+    download(url, p, "M10_NUT.zip")
