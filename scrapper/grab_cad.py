@@ -12,6 +12,8 @@ from config import grabcad_path
 from scrapper.base import filter_escape_char, unzip_file, move_file, convert_to_obj, get_keyword_id
 from utils.utils import make_dir, clean_dir
 from tools import create_image
+from pathlib import Path
+from scrapper.wget_cookie import download
 
 grapcad_url = 'https://grabcad.com'
 api_url = f'{grapcad_url}/community/api/v1/models'
@@ -50,7 +52,7 @@ def get_models(keyword, softwares=None):
         softwares = ["obj"]
     per_page = 100
     model_names, images, total_models = search(keyword, per_page=per_page, softwares=softwares)
-    insert_search_log(keyword, total_models, softwares)
+    #insert_search_log(keyword, total_models, softwares)
     for i in tqdm(range(total_models // per_page)):
         model_name, image, _ = search(keyword, page=i + 2, softwares=softwares)
         model_names += model_name
@@ -59,17 +61,42 @@ def get_models(keyword, softwares=None):
     return model_names, images
 
 
-def get_cadid(cached_slug):
+def get_archive_url(cached_slug):
     url = f'{api_url}/{cached_slug}'
     r = requests.get(url)
     if r.status_code == 200:
         if 'archive_url' in r.json():
-            return r.json()['archive_url'].split('=')[-1]
+            archive = r.json()['archive_url']
+            if archive == None:
+                return None
+            else:
+                return archive#.split('=')[-1]
         else:
             return None
     else:
         raise ConnectionError
 
+def get_files(cached_slug):
+    url = f'{api_url}/{cached_slug}/files'
+    r = requests.get(url)
+    if r.status_code == 200:
+        obj = r.json()
+        if 'files' in obj:
+            return obj['files']
+        else:
+            return None
+    else:
+        raise ConnectionError
+
+def download_files(files):
+    p = Path("downloadDir")
+    p.mkdir(exist_ok=True)
+    for file in files:
+        url = file["download_url"]
+        name = file["name"]
+        print(url, name)
+        download(url, p, name)
+    return p
 
 def download_zipfile(cadid, output_dir):
     url = f'https://d2t1xqejof9utc.cloudfront.net/cads/files/{cadid}/original.zip'
@@ -127,7 +154,7 @@ def run(keyword, softwares=None):
 
     output_dir = f'{grabcad_path}/{keyword}'
     make_dir(output_dir)
-    keyword_id = get_keyword_id(keyword)
+    keyword_id = 1#get_keyword_id(keyword)
 
     # search models
     model_names, model_images = get_models(keyword, softwares=softwares)
@@ -141,17 +168,24 @@ def run(keyword, softwares=None):
                 continue
 
             # check model validity
-            cadid = get_cadid(model_name)
-            if not cadid:
-                continue
+            # cadid = get_cadid(model_name)
+            # print(model_name, cadid)
+            # if not cadid:
+            #     continue
+
+            #arch = get_archive_url(model_name)
+            #print(model_name, arch)
 
             # check db
-            if is_model(cadid):
-                continue
+            #if is_model(cadid):
+            #    continue
 
             # unzip model
-            zip_file = download_zipfile(cadid, output_dir)
-            unzipped_dir = unzip_file(zip_file)
+            # zip_file = download_zipfile(cadid, output_dir)
+            # unzipped_dir = unzip_file(zip_file)
+
+            files = get_files(model_name)
+            unzipped_dir = download_files(files)
 
             # extract files with valid extension
             files = filter_files(keyword, unzipped_dir, softwares)
