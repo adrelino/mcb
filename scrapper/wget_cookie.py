@@ -16,11 +16,11 @@ import requests
 # session.post(AUTH_URL, data=CREDENTIALS)
 # print(session.cookies)
 
-cookies = {"_grabcad_session":"asd....1se"} #TODO: login at https://grabcad.com/community/login and extract this cookie value
-print(cookies)
+COOKIES = {"_grabcad_session":"asd....1se"} #TODO: login at https://grabcad.com/community/login and extract this cookie value
 
-def download(url, out, filename):
-    #resp = session.get(url, stream=True, cookies=cookies)
+def download(url, out, filename, cookies=COOKIES):
+    #print(cookies)
+    #resp = session.get(url, stream=True)
     resp = requests.get(url, stream=True, cookies=cookies)
     if resp.status_code == 200:
         with open(out / filename, 'wb') as f:
