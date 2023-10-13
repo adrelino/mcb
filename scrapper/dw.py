@@ -57,6 +57,7 @@ def filter_files(unzipped_dir):
 
 
 def is_model(cadid):
+    return True
     return not agent.read(f"SELECT * from cad_file WHERE source=2 and source_id='{cadid}'").empty
 
 
@@ -91,10 +92,10 @@ def run(keyword, title_matching=False):
     init_results = search(keyword, per_search, offset=0)
     total = init_results['total']
     total_search = total // per_search
-    insert_search_log(keyword, total)
+    #insert_search_log(keyword, total)
     output_dir = f'{dw_path}/{keyword}'
     make_dir(output_dir)
-    keyword_id = get_keyword_id(keyword)
+    keyword_id = 1 #get_keyword_id(keyword)
     print(f'{total} models found')
 
     for i in range(total_search + 1):
@@ -104,11 +105,11 @@ def run(keyword, title_matching=False):
                 id = item['id']
                 name = filter_escape_char(item['title'])
 
-                if is_model(id):
-                    continue
+                # if is_model(id):
+                #     continue
 
-                if title_matching and keyword not in item['title'].lower():
-                    continue
+                # if title_matching and keyword not in item['title'].lower():
+                #     continue
 
                 zip_file = download(output_dir, item)
                 if not zip_file:
